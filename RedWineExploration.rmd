@@ -1,0 +1,468 @@
+Red Wine Quality Exploration by Xianglian Ni
+========================================================
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using in your analysis in this code
+# chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk. This
+# prevents the code from displaying in the knitted HTML output. You should set
+# echo=FALSE for all code chunks in your file, unless it makes sense for your
+# report to show the code that generated a particular plot.
+
+# The other parameters for "message" and "warning" should also be set to FALSE
+# for other code chunks once you have verified that each plot comes out as you
+# want it to. This will clean up the flow of your report.
+
+knitr::opts_chunk$set(fig.width=9,fig.height=5,fig.path='Figs/',
+                      fig.align='center',tidy=TRUE,
+                      echo=FALSE,warning=FALSE,message=FALSE)
+
+library(ggplot2)
+library(gridExtra)
+library(GGally)
+library(RColorBrewer)
+```
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+redwine <- read.csv('wineQualityReds.csv')
+```
+
+> This dataset contains variables on the chemical properties of 1599 red wines. At least 3 wine experts rated the quality of each wine, providing a rating between 0 (very bad) and 10 (very excellent).
+
+# Univariate Plots Section
+
+```{r echo=FALSE, Univariate_Plots}
+str(redwine)
+summary(redwine)
+```
+
+> Our dataset contains 13 variables and 1599 observations.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(quality, data=redwine, xlab='Quality(in scores)', ylab='count', binwidth=0.5)+
+  scale_x_continuous(breaks=seq(0,10,1),lim=c(0,10))
+summary(redwine$quality)
+table(redwine$quality)
+```
+
+> It seems like the majority of the red wines' quality is 5 and 6. I am also interested in exploring other chemical properties of red wines such as alcohol, pH, chlorides, ect.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(alcohol, data=redwine, xlab='Alcohol(% by volume)
+', ylab='count', binwidth=0.1)+
+  scale_x_continuous(breaks=seq(8,15,1),lim=c(8,15))
+```
+
+> This plot is skewed to right and the peak of percent of acohol in red wine is mostly around 9.5.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(pH, data=redwine, ylab='count')+
+  scale_x_continuous(breaks=seq(2.5,4.2,0.1),limits = c(2.5,4.2))
+summary(redwine$pH)
+table(redwine$pH)
+```
+
+> The shape of pH values is normally distributed. The range of pH is between 2.74 and 4.01. Majority red wine has pH around 3.3.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(x=chlorides, data=redwine, xlab='Sodium Chloride(g/dm^3)', ylab='count', binwidth=0.01)+
+  scale_x_continuous(breaks=seq(0.01,0.62,0.05), limits=c(0.01,0.62))
+```
+
+> There are outliers in red wine chlorides values. The amount of salt in red wine has a peak around 0.08.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+qplot(x=residual.sugar, data=redwine, xlab='Residual Sugar(g/dm^3)', ylab='count', binwidth=0.1)+
+  scale_x_continuous(breaks=seq(0,16,1), limits=c(0,16))
+```
+
+> The amount of sugar remaining peaks around 2. Most of the red wine residual sugar is less than 3.
+
+```{r}
+qplot(density, data=redwine, binwidth=0.0005, xlab='Density(g/cm^3)', ylab='count')
+```
+
+> The density reaches peak around 0.997. The shape of this plot is normally distributed.
+
+```{r, fig.width=10, fig.height=6, echo=FALSE, message=FALSE, warning=FALSE}
+p1 <- qplot(x=sulphates, data=redwine,xlab='Potassium Sulphate(g/dm3)', ylab='count')
+p2 <- qplot(x=free.sulfur.dioxide, data=redwine,xlab='Free SO2(mg/dm^3)',ylab='count')+
+  scale_x_continuous(breaks=seq(0, 80, 5), lim=c(0,80))
+p3 <- qplot(x=total.sulfur.dioxide, data=redwine, xlab='Total SO2(mg/dm^3)', ylab='count')+
+  scale_x_continuous(breaks=seq(0, 290, 50), lim=c(0, 290))
+grid.arrange(p1, p2, p3, ncol=3)
+```
+
+> Sulphates contribute to SO2 level in wine. All of the three plots are right skewed. sulphates(Potassium Sulphate) values have a peak around 0.6. Free sulfur dioxide(SO2) peaks around 7. Total sulfur dioxide has a peak around 20.
+
+```{r}
+qplot(x=citric.acid, data=redwine, xlab='Citric Acid (g/dm^3)', ylab='count', binwidth=0.01)
+```
+
+> The citric acid levels vary a lot among the red wines. A lot of red wines do not have added citric acid. There are also other two peaks aroun 0.25 and 0.5.
+
+```{r}
+plot1 <- qplot(x=fixed.acidity, data=redwine, xlab='Tartaric Acid(g/dm^3)', ylab='count', binwidth=0.1)
+plot2 <- qplot(x=volatile.acidity, data=redwine, xlab='Acetic Acid(g/dm^3)', ylab='count', binwidth=0.01)
+grid.arrange(plot1, plot2, ncol=2)
+```
+
+> Both of the plots are slightly right skewed. With fixed acidity(tartaric acid) has a peak around 7 and the peak of volatile acidity(acetic acid) around 0.7.
+
+```{r}
+redwine$quality.level <- cut(redwine$quality, c(3,5,6,8))
+```
+
+> There is no categorical variable in this dataset, so I can not do any boxplot. In order to explore further in the following analysis, a categorical variable called quality.level is created by dividing quality into three levels. 
+
+# Univariate Analysis
+
+### What is the structure of your dataset?
+
+> There are 1599 red wine samples in the dataset with 11 chemical properties(alcohol, pH, density, chlorides, residual sugar, sulphates, free sulfur dioxide, total sulfur dioxide, citric acid, fixed acidity, volatile acidity).
+The median quality of the red wines is 6. The max quality is 8 and min quality is 3.
+
+### What is/are the main feature(s) of interest in your dataset?
+
+> Alcohol and quality are the main features of this data that I am interested in. I want to know how alcohol content affects the red wine quality. However, other chemical properties such as pH, residual sugar, acidity, sulfur, chlorides may also contribute to the red wine quality.
+
+### What other features in the dataset do you think will help support your \
+investigation into your feature(s) of interest?
+
+> Residual sugar, acid, sulfur, chloride affect red wine quality together with alcohol percentage.
+
+### Did you create any new variables from existing variables in the dataset?
+
+> Yes, I created a new categorical variable called quality.level by cutting variable quality into 3 levels (3,5], (5, 6] and (6, 8].
+
+### Of the features you investigated, were there any unusual distributions? \
+Did you perform any operations on the data to tidy, adjust, or change the form \
+of the data? If so, why did you do this?
+
+> No.
+
+# Bivariate Plots Section
+
+```{r echo=FALSE, Bivariate_Plots}
+theme_set(theme_minimal(20))
+set.seed(1580)
+redwine_subset <- subset(redwine, select = -c(X, quality.level))
+ggpairs(redwine_subset[sample.int(nrow(redwine_subset),1000),])
+```
+
+> None of a single chemical properties has a strong correlation with red wine quality, including alcohol which has the highest correlation coefficient(0.455) among all. Some of the chemical properties have a moderate correaltion with each other, such as pH and fixed acidity, density and fixed acidity, free sulfur dioxide and total sulfur dioxide. It is interesting to look closer at scatter plots involving quality and those chemical properties. It is also necessary to explore some relationships between two chemical properties.
+
+```{r}
+ggplot(aes(x=alcohol, y=quality), data=redwine)+
+  xlab('Alcohol(% by volume)')+
+  ylab('Quality(in scores)')+
+  geom_jitter(alpha=0.3)
+```
+
+> Alcohol does not affect red wine quality in a linear trend.
+
+```{r}
+ggplot(aes(x=pH, y=quality), data=redwine)+
+  ylab('Quality(in scores)')+
+  xlab('pH')+
+geom_jitter(alpha=0.4)
+```
+
+> pH level and red wine quality are not correlated.
+
+```{r}
+ggplot(aes(x=density, y=quality), data=redwine)+
+  ylab('Quality(in scores)')+
+  xlab('Density(g/cm^3)')+
+  geom_jitter(alpha=0.4)
+```
+
+> Density does not affect red wine quality alone.
+
+```{r}
+ggplot(aes(x=residual.sugar, y=quality), data=redwine)+
+  xlab('Residual Sugar(g/dm^3)')+
+  ylab('Quality(in scores)')+
+  geom_point()
+```
+
+> Residual sugar alone does not affect red wine quality in a positive or negative trend.
+
+```{r}
+ggplot(aes(x=sulphates, y=quality), data=redwine)+
+  xlab('Potassium sulphate(g/dm3)')+
+  ylab('Quality(in scores')+
+  geom_jitter(alpha=0.3)
+```
+
+> Sulphates(Potassium sulphate) level does not seem to correlate with red wine quality.
+
+```{r}
+ggplot(aes(x=free.sulfur.dioxide, y=quality), data=redwine)+
+  xlab('Free SO2(mg/dm^3)')+
+  ylab('Quality(in scores)')+
+  geom_point()
+```
+
+> Free sulfur dioxide level does not have a strong correlation with red wine quality.
+
+```{r}
+ggplot(aes(x=total.sulfur.dioxide, y=quality), data=redwine)+
+  xlab('Total SO2(mg/dm^3)')+
+  ylab('Quality(in scores)')+
+  geom_jitter(alpha=0.5)
+```
+
+> Total sulfur dioxide(SO2) level alone does not affect red wine overal quality.
+
+```{r}
+ggplot(aes(x=citric.acid, y=quality), data=redwine)+
+  ylab('Quality(in scores)')+
+  xlab('Citric Acid (g / dm^3)')+
+  geom_point()
+```
+
+> Citric acid and red wine quality are not correlated.
+
+```{r}
+ggplot(aes(x=fixed.acidity, y=quality), data=redwine)+
+  ylab('Quality(in scores)')+
+  xlab('Tartaric Acid(g/dm^3)')+
+  geom_jitter(alpha=0.3)
+```
+
+> Fixed acidity(Tartaric Acid) does not affect the red wine quality in a positive or negative way.
+
+```{r}
+ggplot(aes(x=volatile.acidity, y=quality), data=redwine)+
+  ylab('Quality(in scores)')+
+  xlab('Acetic Acid(g/dm^3)')+
+  geom_jitter(alpha=0.3)
+```
+
+> Volatile acidity does not seem to have a correlation with red wine quality.
+
+```{r}
+ggplot(aes(x=free.sulfur.dioxide, y=total.sulfur.dioxide), data=redwine)+
+  xlab('Free SO2(mg/dm^3)')+
+  ylab('Total SO2(mg/dm^3)')+
+  geom_jitter(alpha=0.3, color='#F79420')+
+  stat_smooth(method='lm')
+```
+
+> Free sulfur dioxide(SO2) and total sulfur dioxide(SO2) levels are in a strong positive relationship.
+
+```{r}
+ggplot(aes(x=sulphates, y=total.sulfur.dioxide), data=redwine)+
+  ylab('Total SO2(mg/dm^3)')+
+  xlab('Potassium sulphate(g/dm3)')+
+  geom_jitter(alpha=0.3)
+```
+
+> Sulphates(Potassium sulphate) and total sulfur dioxide levals are not in a positive relationship.
+
+```{r}
+ggplot(aes(x=sulphates, y=free.sulfur.dioxide), data=redwine)+
+  xlab('Potassium sulphate(g/dm3)')+
+  ylab('Free SO2(mg/dm^3)')+
+  geom_jitter(alpha=0.3)
+```
+
+> Sulphates level does not have a strong relationship with free sulfur dioxide level.
+
+```{r}
+ggplot(aes(x=volatile.acidity, y=fixed.acidity), data=redwine)+
+  xlab('Acetic Acid(g/dm^3)')+
+  ylab('Tartaric Acid(g/dm^3)')+
+  geom_jitter(alpha=0.3)
+```
+
+> Fixed acidity and volatile acidity does not show a relationship.
+
+```{r}
+ggplot(aes(x=fixed.acidity, y=pH), data=redwine)+
+  geom_jitter(alpha=0.5, color='orange', shape=21)+
+  xlab('Tartaric Acid(g/dm^3)')+
+  stat_smooth(method='lm')
+```
+
+> The pH level and fixed acidity(tartaric acid) are strongly related.
+
+```{r}
+ggplot(aes(x=density, y=fixed.acidity), data=redwine)+
+  xlab('Density(g/cm^3)')+
+  ylab('Tartaric Acid(g/dm^3)')+
+  geom_jitter(alpha=0.5, color='orange', shape=21)+
+  stat_smooth(method='lm')
+```
+
+> The fixed acidity increased with the increase of density. It has a positive relationship.
+
+```{r}
+ggplot(aes(x=citric.acid, y=volatile.acidity), data=redwine)+
+  xlab('Citric Acid(g/dm^3)')+
+  ylab('Acetic Acid(g/dm^3)')+
+  geom_jitter(alpha=0.5, color='orange', shape=21)+
+  stat_smooth(method='lm')
+```
+
+> With the increase of citric acid, the volatile acidity(acetic acid) decreased. A line was drawn to see the trend.
+
+# Bivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. How did the feature(s) of interest vary with other features in \
+the dataset?
+
+> Alcohol percentage does not seem to have a strong correlation with red wine quality. None of the chemical properties alone has a a strong correlation with red wine quality.
+
+### Did you observe any interesting relationships between the other features \
+(not the main feature(s) of interest)?
+
+> Yes, the correlation coefficient between free sulfur dioxide and total sulfur dioxide is 0.68. The correlation coefficient between fixed acidity and pH is -0.682. It is easy to understand that with the increase of fixed acidity, the pH is decreased. The correlation coefficient between density and fixed acidity is 0.666. The correlation coefficient between citric acid and fixed acidity is 0.661. The correlation coefficient between citric acid and volatile acidity is -0.546.
+
+### What was the strongest relationship you found?
+
+> Fixed acidity and pH have the strongest relationship among all.
+
+# Multivariate Plots Section
+
+```{r echo=FALSE, Multivariate_Plots}
+ggplot(aes(x=2*round(fixed.acidity/2), y=pH), data=subset(redwine, !is.na(quality.level)))+
+  xlab('Tartaric Acid(g/dm^3)')+
+  geom_smooth(aes(color=quality.level), stat='summary', fun.y=median)
+```
+
+> Smooth lines were made to show the relationship between pH and fixed acidity(tartaric acid). The increased fixed acidity results in decreased pH median levels. But this change does not seem to have an impact on overal red wine quality.
+
+```{r}
+ggplot(aes(x=2*round(free.sulfur.dioxide/2), y=total.sulfur.dioxide), data=subset(redwine, !is.na(quality.level)))+
+  xlab('Free SO2(mg/dm^3)')+
+  ylab('Total SO2(mg/dm^3)')+
+  geom_smooth(aes(color=quality.level), stat='summary', fun.y=median)
+```
+
+> The line plot shows that lower quality redwine usually has a higher total sulfur dioxide. Since free sulfur dioxide has a strong positive correlation with total sulfur dioxide, I am interested in knowing if the ratio of free sulfur dioxide in total sulfur dioxide has an impact on red wine quality.
+
+```{r}
+ggplot(aes(x=quality.level, y=free.sulfur.dioxide/total.sulfur.dioxide), data=subset(redwine, !is.na(quality.level)))+
+  xlab('Quality Levels')+
+  ylab('Ratio of Free/Total SO2')+
+  geom_boxplot()
+```
+
+> I made a boxplot to show the trend. The boxplot shows that the higher quality wine has a higher median ratio of free sulfur dioxide. 
+
+```{r}
+ggplot(aes(x = free.sulfur.dioxide, y = free.sulfur.dioxide/total.sulfur.dioxide), data=subset(redwine, !is.na(quality.level))) + 
+  xlab('Free SO2(mg/dm^3)')+
+  ylab('Ratio of Free/Total SO2')+
+  geom_point(aes(color=quality.level),alpha = 0.8, size = 1, position = 'jitter') +
+  scale_color_brewer(type = 'div',
+    guide = guide_legend(title = 'quality.level', reverse = FALSE,
+                         override.aes = list(alpha = 1, size = 2)))
+```
+
+> The scatter plot also shows that the red wine with higher quality usually has higher free sulfur dioxide ratio.
+
+```{r}
+ggplot(aes(x=citric.acid, y=fixed.acidity), data=subset(redwine, !is.na(quality.level)))+
+  xlab('Citric Acid(g/dm^3)')+
+  ylab('Tartaric Acid(g/dm^3)')+
+  geom_smooth(aes(color=quality.level), stat='summary', fun.y=median)
+```
+
+> The citric acid and fixed acidity(tartaric acid) has a positive correlation. It does not seem there is any overal impact on red wine quality with the changes.
+
+# Multivariate Analysis
+
+### Talk about some of the relationships you observed in this part of the \
+investigation. Were there features that strengthened each other in terms of \
+looking at your feature(s) of interest?
+
+> The fixed acidity and pH do not have too much impact on the quality level of various red wine samples. The citric acid and fixed acidity do not affect the overall quality of red wines too.
+
+### Were there any interesting or surprising interactions between features?
+
+> The higher amount of total sulfur dioxide has a negative impact on the quality of red wine. However, the increased ratio of free sulfur dioxide in red wine can help to increase the red wine quality.
+
+### OPTIONAL: Did you create any models with your dataset? Discuss the \
+strengths and limitations of your model.
+
+> No.
+
+------
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One, message=FALSE, warning=FALSE}
+theme_update(plot.title = element_text(hjust = 0.5))
+qplot(quality, data=redwine, xlab='Quality(in scores)', ylab='Number of qualities', binwidth=0.5)+
+  scale_x_continuous(breaks=seq(0,10,1),lim=c(0,10))+
+  ggtitle('Red wine qualities')
+```
+
+### Description One
+
+> Quality is the most important thing when we buy red wines. So this plot is to show the score of quality and their occurrences. Red wine quality is scored between 0 and 10. From the plot, we can see that most of the red wines are scored at 5 and 6. There is no red wine scored at 0, 1, 2, 9 or 10. Majority of the red wine have a score equal or over 5.
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+ggplot(aes(x=free.sulfur.dioxide, y=total.sulfur.dioxide), data=redwine)+
+  geom_jitter(alpha=0.3, color='#9dff00')+
+  ggtitle('Free Sulfur dioxide vs Total sulfur dioxide')+
+  xlab('Free sulfur dioxide(mg/dm^3)')+
+  ylab('Total sulfur dioxide(mg/dm^3)')+
+  scale_x_continuous(breaks=seq(0, 75, 10), limits=c(0, 75))+
+  stat_smooth(method='lm')
+```
+
+### Description Two
+
+> There is no single chemical property investigated has a strong correlation with red wine quality. But there are some moderate correlation between two properties. For example, this plot shows the free sulfur dioxide in red wine has a positive correlation with total sulfur dioxide. Sulfur dioxide(SO2) is used to prevent microbial growth and the oxidation of wine. With high concentration, SO2 becomes evident in the nose and taste of wine. They potentially have an impact on wine quality. So it is interesting to explore more on this.
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+ggplot(aes(x=quality.level, y=free.sulfur.dioxide/total.sulfur.dioxide), data=subset(redwine, !is.na(quality.level)))+
+  ggtitle('Free SO2/Total SO2 on quality levels')+
+  xlab('Quality levels')+
+  ylab('Ratio of Free/Total SO2')+
+  geom_boxplot(color='red', fill=I('#5a782a'), outlier.shape = NA)+
+  geom_jitter(position=position_jitter(width=0.1, height=0), color='blue', alpha=0.3)
+```
+
+> A categorical variable called quality.level was created by dividing the quality into 3 levels. By creating a categorical variable, I was able to generate a boxplot to show the chemical properties among the different quality levels. Density is defined as the ration of free sulfur dioxide over total sulfur dioxide(SO2). The boxplot shows the density distribution among three red wine quality levels. Higher quality has a larger median value of density.
+
+```{r,fig.width=10, fig.height=6}
+ggplot(aes(x = free.sulfur.dioxide, y = free.sulfur.dioxide/total.sulfur.dioxide), data=subset(redwine, !is.na(quality.level))) + 
+  geom_point(aes(color=quality.level),alpha = 0.8, size = 1, position = 'jitter') +
+  xlab('Free SO2 (mg/dm^3)')+
+  ylab('Ratio of Free/Total SO2')+
+  ggtitle('Free SO2/Total SO2 by quality levels')+
+  scale_x_continuous(breaks=seq(0, 75, 10), limits=c(0, 75))+
+  scale_color_brewer(type = 'div',
+    guide = guide_legend(title = 'quality.level', reverse = FALSE,
+                         override.aes = list(alpha = 1, size = 2)))
+```
+
+### Description Three
+
+> Hold the free sulfur dioxide(SO2), the higher density of free sulfur dioxide over total sulfur dioxide usually has a higher red wine quality. This might indicate that ratio of free and total sulfur dioxide has an impact on red wine quality. With a larger dataset, there might be a better result to show the trend.
+
+------
+
+# Reflection
+
+> Drinking red wine appropriately is good to health. There are a lot of brands for red wine in the market. It is hard to choose as it is hard to know their qualities. This dataset provides the opportunity for me to explore a little and get to know the red wine better. There are 12 chemical properties that might be related to the red wine quality. At the frist glance, I would assume that alcohol might decide the quality level. I made the scatterplot of alcohol and quality. It turned out that there is no strong correlation between them. I, therefore, plotted each available chemical property versus quality. None of them shows strong correlation. Then I started plotted scatterplot between two chemical properties. From there, I found that there are some moderate correlation between two properties, such as free sulfur dioxide vs total sulfur dioxide, pH vs fixed acidity, density vs fixed acidity, citric acid vs volatile acidity.
+
+> In order to make a boxplot, I created a categorical variable called quality.level by dividing the quality variable into three levels. Then I was able to further explore the impact of free sulfur dioxide and total sulfur dioxide on red wine quality. It turn out that the median ratio of free sulfur dioxide over total sulfur dioxide is increased with the increased of red wine quality. The scatterplot also shows the same trend.
+
+> It is pretty challenging to predict which property has the most impact on red wine quality. The quality is probably decided by multiple properties. As the wine processing procedure is so complicated and the grapes used to make the wine grow in different climate make it harder to say there is only one or two proeprties can impact the quality. In the future, it will be more interesting to investigate a larger dataset and include additional variable such as the country where the wine is produced. 
+
+# References:
+> Udacity courses.
+
+> Stackoverflow site: https://stackoverflow.com/questions/40675778/center-plot-title-in-ggplot2
